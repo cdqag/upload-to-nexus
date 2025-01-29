@@ -3,6 +3,10 @@ const mockedServerResponse: Record<string, CallableFunction> = {
         return {
             message: {
                 statusCode: 201,
+            },
+
+            readBody: async () => {
+                return '';
             }
         };
     },
@@ -11,6 +15,10 @@ const mockedServerResponse: Record<string, CallableFunction> = {
         return {
             message: {
                 statusCode: 401,
+            },
+
+            readBody: async () => {
+                return '';
             }
         };
     },
@@ -19,6 +27,10 @@ const mockedServerResponse: Record<string, CallableFunction> = {
         return {
             message: {
                 statusCode: 404,
+            },
+
+            readBody: async () => {
+                return '';
             }
         };
     },
@@ -26,8 +38,11 @@ const mockedServerResponse: Record<string, CallableFunction> = {
     '/repository/res-418/file.txt': () => {
         return {
             message: {
-                statusCode: 418,
-                statusMessage: "I'm a teapot"
+                statusCode: 418
+            },
+
+            readBody: async () => {
+                return 'I\'m a teapot';
             }
         };
     },

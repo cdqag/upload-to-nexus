@@ -35,10 +35,6 @@ export class NexusRepositoryClient {
 
     const handlers = username !== '' ? [new BasicCredentialHandler(username, password)] : undefined
     this.http = new HttpClient(USER_AGENT, handlers);
-
-    if (core.isDebug()) {
-      process.env.NODE_DEBUG = 'http';
-    }
   }
 
   get repositoryUrl(): string {
@@ -54,19 +50,31 @@ export class NexusRepositoryClient {
 
     core.info(`➡️ Uploading file '${src}' to '${destPath}'`);
     const response = await this.http.request('PUT', `${this.repositoryUrl}/${destPath}`, createReadStream(src));
+    const body = await response.readBody();
+    
+    let errorMessage = '';
     switch (response.message.statusCode) {
       case 201:
         return 'OK';
 
       case 401:
-        throw new Error('Server responded with 401 - Unauthorized. Please check if the username and password are correct.');
+        errorMessage = 'Server responded with 401 - Unauthorized. Please check if the username and password are correct.';
+        break;
 
       case 404:
-        throw new Error(`Server responded with 404 - Not Found. Please check if the instance URL is correct and repository '${this.repository}' exists.`);
+        errorMessage = `Server responded with 404 - Not Found. Please check if the instance URL is correct and repository '${this.repository}' exists.`;
+        break;
 
       default:
-        throw new Error(`Failed to upload file: [${response.message.statusCode}] ${response.message.statusMessage}`);
+        errorMessage = `Server responded with ${response.message.statusCode}`;
+        break;
     }
+
+    if (body !== '') {
+      errorMessage += `\n${body}`;
+    }
+
+    throw new Error(errorMessage);
   }
 
 }

@@ -44,7 +44,7 @@ describe('NexusRepositoryClient', () => {
     test('should throw error if server responds with unknown error', async () => {
       const client = new NexusRepositoryClient('http://localhost:8081', 'res-418');
 
-      await expect(client.uploadFile(path.join(__dirname, '__fixtures__/file1.txt'), 'file.txt')).rejects.toThrow("Failed to upload file: [418] I'm a teapot");
+      await expect(client.uploadFile(path.join(__dirname, '__fixtures__/file1.txt'), 'file.txt')).rejects.toThrow("Server responded with 418\nI'm a teapot");
     });
   });
 });

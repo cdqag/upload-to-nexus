@@ -5,6 +5,13 @@ import { LocalFileDoesNotExistReaction, getLocalFileDoesNotExistReactionByValue 
 import { NexusRepositoryClient } from './lib/NexusRepositoryClient';
 import { FileDoesNotExistException } from './lib/errors/FileDoesNotExistException';
 
+
+if (core.isDebug()) {
+  core.debug("Enabling debug logs for http, https and http2");
+  process.env.NODE_DEBUG = 'http,https,http2';
+}
+
+
 //#region Inputs
 
 // --- Instance URL
