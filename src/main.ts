@@ -53,7 +53,8 @@ const main = async () => {
     core.debug(`Processing delegation: ${delegation}`);
 
     try {
-      client.uploadFile(delegation.src, delegation.dest);
+      await client.uploadFile(delegation.src, delegation.dest);
+      core.info(`✅ Successfully uploaded file '${delegation.src}' to '${delegation.dest}'`);
 
     } catch (error) {
       if (error instanceof FileDoesNotExistException) {

@@ -35,6 +35,10 @@ export class NexusRepositoryClient {
 
     const handlers = username !== '' ? [new BasicCredentialHandler(username, password)] : undefined
     this.http = new HttpClient(USER_AGENT, handlers);
+
+    if (core.isDebug()) {
+      process.env.NODE_DEBUG = 'http';
+    }
   }
 
   get repositoryUrl(): string {
@@ -48,7 +52,7 @@ export class NexusRepositoryClient {
     
     const destPath = normalizeDestPath(`${this.defaultDestination}/${dest}`);
 
-    core.info(`Uploading file '${src}' to '${destPath}'`);
+    core.info(`➡️ Uploading file '${src}' to '${destPath}'`);
     const response = await this.http.request('PUT', `${this.repositoryUrl}/${destPath}`, createReadStream(src));
     switch (response.message.statusCode) {
       case 201:
