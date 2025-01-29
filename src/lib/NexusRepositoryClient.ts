@@ -1,6 +1,7 @@
 import { URL } from 'node:url';
 import { existsSync, createReadStream } from 'node:fs';
 
+import * as core from '@actions/core';
 import { HttpClient } from "@actions/http-client";
 import { BasicCredentialHandler } from "@actions/http-client/lib/auth";
 
@@ -47,6 +48,7 @@ export class NexusRepositoryClient {
     
     const destPath = normalizeDestPath(`${this.defaultDestination}/${dest}`);
 
+    core.info(`Uploading file '${src}' to '${destPath}'`);
     const response = await this.http.request('PUT', `${this.repositoryUrl}/${destPath}`, createReadStream(src));
     switch (response.message.statusCode) {
       case 201:

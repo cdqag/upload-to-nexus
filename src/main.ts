@@ -51,7 +51,7 @@ const main = async () => {
 
   for (const delegation of resolvedDelegations) {
     core.debug(`Processing delegation: ${delegation}`);
-    
+
     try {
       client.uploadFile(delegation.src, delegation.dest);
 
