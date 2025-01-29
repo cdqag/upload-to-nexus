@@ -106,7 +106,9 @@ export const resolveDelegations = (delegations: UploadDelegation[]): UploadDeleg
   for (const delegation of delegations) {
     core.debug(`Resolving delegation: ${delegation.src}`);
     globSync([delegation.src], { dot: true }).forEach(file => {
-      const dest = path.basename(file);
+      let dest = delegation.dest;
+      dest = dest.replace('*', path.basename(file));
+
       core.debug(`Resolved delegation: ${file} => ${dest}`);
       resolvedDelegations.push({
         src: file,

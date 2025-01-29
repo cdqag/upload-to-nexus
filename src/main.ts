@@ -61,18 +61,20 @@ const main = async () => {
 
     try {
       await client.uploadFile(delegation.src, delegation.dest);
-      core.info(`✅ Successfully uploaded file '${delegation.src}' to '${delegation.dest}'`);
+      core.info(`✅ Success`);
 
     } catch (error) {
       if (error instanceof FileDoesNotExistException) {
         if (localFileDoesNotExistReaction === LocalFileDoesNotExistReaction.fail) {
-          core.setFailed(error.message);
+          core.setFailed(`❌ ${error.message}`);
+          return;
         } else if (localFileDoesNotExistReaction === LocalFileDoesNotExistReaction.warnIgnore) {
-            core.warning(error.message);
+          core.warning(`⚠️ ${error.message}`);
         }
 
       } else {
-        core.setFailed(error.message);
+        core.setFailed(`❌ ${error.message}`);
+        return;
       }
     }
 

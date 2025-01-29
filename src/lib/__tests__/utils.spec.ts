@@ -88,7 +88,7 @@ describe('resolveDelegations', () => {
     expect(resolveDelegations([
       {
         src: path.join(__dirname, '__fixtures__/*'),
-        dest: '*'
+        dest: 'foo/*'
       },
       {
         src: path.join(__dirname, '__fixtures__/sub/file3.txt'),
@@ -97,15 +97,15 @@ describe('resolveDelegations', () => {
     ])).toEqual([
       {
         src: path.join(__dirname, '__fixtures__/file1.txt'),
-        dest: 'file1.txt'
+        dest: 'foo/file1.txt'
       },
       {
         src: path.join(__dirname, '__fixtures__/file2.txt'),
-        dest: 'file2.txt'
+        dest: 'foo/file2.txt'
       },
       {
         src: path.join(__dirname, '__fixtures__/sub/file3.txt'),
-        dest: 'file3.txt'
+        dest: 'othername.txt'
       }
     ]);
   });
