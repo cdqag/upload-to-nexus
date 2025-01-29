@@ -1,5 +1,7 @@
 # Upload to Nexus
 
+![Tests](https://camo.githubusercontent.com/1e24f9affb7fc2d7ac11d01ad1000e8d462051ea2cb38075946fb4a2532b2951/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f74657374732d32342532307061737365642d73756363657373)
+
 This GitHub Action upload given file(s) to pointed Nexus instance.
 
 ## Usage
