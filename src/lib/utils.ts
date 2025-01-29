@@ -1,5 +1,7 @@
+import * as path from 'path';
 import * as core from '@actions/core';
 import { type UploadDelegation } from './UploadDelegation';
+import { globSync } from 'fast-glob';
 
 /**
  * Process files input and output a list of files to upload.
@@ -49,7 +51,8 @@ export const processFilesInput = (filesInput: String): UploadDelegation[] => {
     let dest = '';;
 
     if (parts.length === 1) {
-      src = dest = parts[0];
+      src = parts[0];
+      dest = path.basename(src);
     } else {
       src = parts[0];
       dest = parts[1];
@@ -95,4 +98,22 @@ export const normalizeDestPath = (dest: string): string => {
     dest = dest.substring(1);
   }
   return dest;
+}
+
+export const resolveDelegations = (delegations: UploadDelegation[]): UploadDelegation[] => {
+  const resolvedDelegations: UploadDelegation[] = [];
+
+  for (const delegation of delegations) {
+    core.debug(`Resolving delegation: ${delegation.src}`);
+    globSync([delegation.src], { dot: true }).forEach(file => {
+      const dest = path.basename(file);
+      core.debug(`Resolved delegation: ${file} => ${dest}`);
+      resolvedDelegations.push({
+        src: file,
+        dest
+      });
+    });
+  }
+
+  return resolvedDelegations;
 }

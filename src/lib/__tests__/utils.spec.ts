@@ -1,9 +1,10 @@
+import * as path from 'path';
 import { describe, test, expect } from '@jest/globals';
 
 import {
   processFilesInput,
   normalizeDestPath,
-  getBasicAuthHeaderValue
+  resolveDelegations
 } from '../utils';
 
 describe('processFilesInput', () => {
@@ -37,7 +38,9 @@ describe('processFilesInput', () => {
   test('should process multiple lines', () => {
     const result = processFilesInput(`
 ./file1.txt
-./sub/file2.txt => othername.txt`);
+./sub/file2.txt
+./sub/file3.txt => foo/othername.txt
+./sub/* => *`);
     expect(result).toEqual([
       {
         src: './file1.txt',
@@ -45,7 +48,15 @@ describe('processFilesInput', () => {
       },
       {
         src: './sub/file2.txt',
-        dest: 'othername.txt'
+        dest: 'file2.txt'
+      },
+      {
+        src: './sub/file3.txt',
+        dest: 'foo/othername.txt'
+      },
+      {
+        src: './sub/*',
+        dest: '*'
       }
     ]);
   });
@@ -69,5 +80,33 @@ describe('normalizeDestPath', () => {
 
   test('should leave relative path', () => {
     expect(normalizeDestPath('../sub/file2.txt')).toBe('../sub/file2.txt');
+  });
+});
+
+describe('resolveDelegations', () => {
+  test('should resolve delegations', () => {
+    expect(resolveDelegations([
+      {
+        src: path.join(__dirname, '__fixtures__/*'),
+        dest: '*'
+      },
+      {
+        src: path.join(__dirname, '__fixtures__/sub/file3.txt'),
+        dest: 'othername.txt'
+      }
+    ])).toEqual([
+      {
+        src: path.join(__dirname, '__fixtures__/file1.txt'),
+        dest: 'file1.txt'
+      },
+      {
+        src: path.join(__dirname, '__fixtures__/file2.txt'),
+        dest: 'file2.txt'
+      },
+      {
+        src: path.join(__dirname, '__fixtures__/sub/file3.txt'),
+        dest: 'file3.txt'
+      }
+    ]);
   });
 });

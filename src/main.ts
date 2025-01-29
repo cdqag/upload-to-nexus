@@ -1,6 +1,9 @@
 import * as core from '@actions/core';
-import { processFilesInput, requireNonEmptyStringInput } from './lib/utils';
+
+import { processFilesInput, requireNonEmptyStringInput, resolveDelegations } from './lib/utils';
 import { LocalFileDoesNotExistReaction, getLocalFileDoesNotExistReactionByValue } from './lib/LocalFileDoesNotExistReaction';
+import { NexusRepositoryClient } from './lib/NexusRepositoryClient';
+import { FileDoesNotExistException } from './lib/errors/FileDoesNotExistException';
 
 //#region Inputs
 
@@ -19,6 +22,7 @@ const repository = requireNonEmptyStringInput('repository');
 // --- Files
 const filesInput = requireNonEmptyStringInput('files');
 const delegations = processFilesInput(filesInput);
+const resolvedDelegations = resolveDelegations(delegations);
 
 // --- Default destination
 const defaultDestination = core.getInput('default-destination').trim();
@@ -37,3 +41,34 @@ try {
 }
 
 //#endregion
+
+const main = async () => {
+  core.debug("Initializing Nexus Repository Client");
+  const client = new NexusRepositoryClient(
+    instanceUrl, repository, defaultDestination,
+    username, password
+  );
+
+  for (const delegation of resolvedDelegations) {
+    core.debug(`Processing delegation: ${delegation}`);
+    
+    try {
+      client.uploadFile(delegation.src, delegation.dest);
+
+    } catch (error) {
+      if (error instanceof FileDoesNotExistException) {
+        if (localFileDoesNotExistReaction === LocalFileDoesNotExistReaction.fail) {
+          core.setFailed(error.message);
+        } else if (localFileDoesNotExistReaction === LocalFileDoesNotExistReaction.warnIgnore) {
+            core.warning(error.message);
+        }
+
+      } else {
+        core.setFailed(error.message);
+      }
+    }
+
+  }
+};
+
+main();
