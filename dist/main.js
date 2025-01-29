@@ -22752,7 +22752,6 @@ var NexusRepositoryClient = class {
 		this.defaultDestination = defaultDestination$1;
 		const handlers = username$1 !== "" ? [new import_auth.BasicCredentialHandler(username$1, password$1)] : undefined;
 		this.http = new import_lib.HttpClient(USER_AGENT, handlers);
-		if (import_core.isDebug()) process.env.NODE_DEBUG = "http";
 	}
 	get repositoryUrl() {
 		return `${this.instanceUrl.href}repository/${this.repository}`;
@@ -22762,17 +22761,31 @@ var NexusRepositoryClient = class {
 		const destPath = normalizeDestPath(`${this.defaultDestination}/${dest}`);
 		import_core.info(`➡️ Uploading file '${src}' to '${destPath}'`);
 		const response = await this.http.request("PUT", `${this.repositoryUrl}/${destPath}`, (0, node_fs.createReadStream)(src));
+		const body = await response.readBody();
+		let errorMessage = "";
 		switch (response.message.statusCode) {
 			case 201: return "OK";
-			case 401: throw new Error("Server responded with 401 - Unauthorized. Please check if the username and password are correct.");
-			case 404: throw new Error(`Server responded with 404 - Not Found. Please check if the instance URL is correct and repository '${this.repository}' exists.`);
-			default: throw new Error(`Failed to upload file: [${response.message.statusCode}] ${response.message.statusMessage}`);
+			case 401:
+				errorMessage = "Server responded with 401 - Unauthorized. Please check if the username and password are correct.";
+				break;
+			case 404:
+				errorMessage = `Server responded with 404 - Not Found. Please check if the instance URL is correct and repository '${this.repository}' exists.`;
+				break;
+			default:
+				errorMessage = `Server responded with ${response.message.statusCode}`;
+				break;
 		}
+		if (body !== "") errorMessage += `\n${body}`;
+		throw new Error(errorMessage);
 	}
 };
 
 //#endregion
 //#region src/main.ts
+if (import_core.isDebug()) {
+	import_core.debug("Enabling debug logs for http, https and http2");
+	process.env.NODE_DEBUG = "http,https,http2";
+}
 const instanceUrl = requireNonEmptyStringInput("instance-url");
 const repository = requireNonEmptyStringInput("repository");
 {
