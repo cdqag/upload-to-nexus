@@ -22752,6 +22752,7 @@ var NexusRepositoryClient = class {
 		this.defaultDestination = defaultDestination$1;
 		const handlers = username$1 !== "" ? [new import_auth.BasicCredentialHandler(username$1, password$1)] : undefined;
 		this.http = new import_lib.HttpClient(USER_AGENT, handlers);
+		if (import_core.isDebug()) process.env.NODE_DEBUG = "http";
 	}
 	get repositoryUrl() {
 		return `${this.instanceUrl.href}repository/${this.repository}`;
@@ -22759,7 +22760,7 @@ var NexusRepositoryClient = class {
 	async uploadFile(src, dest) {
 		if (!(0, node_fs.existsSync)(src)) throw new FileDoesNotExistException(src);
 		const destPath = normalizeDestPath(`${this.defaultDestination}/${dest}`);
-		import_core.info(`Uploading file '${src}' to '${destPath}'`);
+		import_core.info(`➡️ Uploading file '${src}' to '${destPath}'`);
 		const response = await this.http.request("PUT", `${this.repositoryUrl}/${destPath}`, (0, node_fs.createReadStream)(src));
 		switch (response.message.statusCode) {
 			case 201: return "OK";
@@ -22797,7 +22798,8 @@ const main = async () => {
 	for (const delegation of resolvedDelegations) {
 		import_core.debug(`Processing delegation: ${delegation}`);
 		try {
-			client.uploadFile(delegation.src, delegation.dest);
+			await client.uploadFile(delegation.src, delegation.dest);
+			import_core.info(`✅ Successfully uploaded file '${delegation.src}' to '${delegation.dest}'`);
 		} catch (error$1) {
 			if (error$1 instanceof FileDoesNotExistException) {
 				if (localFileDoesNotExistReaction === LocalFileDoesNotExistReaction.fail) import_core.setFailed(error$1.message);
