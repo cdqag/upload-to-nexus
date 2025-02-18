@@ -119,3 +119,7 @@ export const resolveDelegations = (delegations: UploadDelegation[]): UploadDeleg
 
   return resolvedDelegations;
 }
+
+export const basicAuthHeader = (username: string, password: string): string => {
+  return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+}
