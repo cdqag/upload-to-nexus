@@ -4,7 +4,8 @@ import { describe, test, expect } from '@jest/globals';
 import {
   processFilesInput,
   normalizeDestPath,
-  resolveDelegations
+  resolveDelegations,
+  basicAuthHeader
 } from '../utils';
 
 describe('processFilesInput', () => {
@@ -108,5 +109,15 @@ describe('resolveDelegations', () => {
         dest: 'othername.txt'
       }
     ]);
+  });
+});
+
+describe('basicAuthHeader', () => {
+  test('should return proper value for empty password', () => {
+    expect(basicAuthHeader('anonymous', '')).toBe('Basic YW5vbnltb3VzOg==');
+  });
+
+  test('should return proper value for non-empty password', () => {
+    expect(basicAuthHeader('user', 'password')).toBe('Basic dXNlcjpwYXNzd29yZA==');
   });
 });

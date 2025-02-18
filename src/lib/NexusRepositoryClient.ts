@@ -1,13 +1,13 @@
 import { URL } from 'node:url';
-import { existsSync, createReadStream } from 'node:fs';
+import { existsSync, openAsBlob } from 'node:fs';
 
 import * as core from '@actions/core';
-import { HttpClient } from "@actions/http-client";
-import { BasicCredentialHandler } from "@actions/http-client/lib/auth";
+
+import { Client, FormData } from 'undici'
 
 import { InvalidURLProtocolException } from './errors/InvalidURLProtocolException';
 import { FileDoesNotExistException } from './errors/FileDoesNotExistException';
-import { normalizeDestPath } from './utils';
+import { normalizeDestPath, basicAuthHeader } from './utils';
 
 const USER_AGENT = 'cdqag/upload-to-nexus'
 
@@ -15,8 +15,9 @@ export class NexusRepositoryClient {
   private instanceUrl: URL;
   private repository: string;
   private defaultDestination: string;
+  private authHeader: string;
   
-  private http: HttpClient;
+  private client: Client;
 
   constructor(
     instanceUrl: string,
@@ -33,12 +34,39 @@ export class NexusRepositoryClient {
     this.repository = repository;
     this.defaultDestination = defaultDestination;
 
-    const handlers = username !== '' ? [new BasicCredentialHandler(username, password)] : undefined
-    this.http = new HttpClient(USER_AGENT, handlers);
+    this.client = new Client(this.instanceUrl);
+
+    this.authHeader = username !== '' ? basicAuthHeader(username, password) : '';
   }
 
-  get repositoryUrl(): string {
-    return `${this.instanceUrl.href}repository/${this.repository}`;
+  get apiV1(): string {
+    return `/service/rest/v1`;
+  }
+
+  // https://help.sonatype.com/en/components-api.html#components-api
+  get apiV1components(): string {
+    return `${this.apiV1}/components`;
+  }
+
+  get headers(): Record<string, string> {
+    const h = {
+      'User-Agent': USER_AGENT
+    };
+
+    if (this.authHeader !== '') {
+      h['Authorization'] = this.authHeader;
+    }
+
+    return h;
+  }
+
+  private async requestPost(path: string, body: FormData) {
+    return this.client.request({
+      method: 'POST',
+      path,
+      headers: this.headers,
+      body
+    });
   }
 
   async uploadFile(src: string, dest: string) {
@@ -47,14 +75,22 @@ export class NexusRepositoryClient {
     }
     
     const destPath = normalizeDestPath(`${this.defaultDestination}/${dest}`);
+    const destDir = destPath.substring(0, destPath.lastIndexOf('/'));
+    const destFile = destPath.substring(destPath.lastIndexOf('/') + 1);
+
+    // https://help.sonatype.com/en/components-api.html#raw
+    const formData = new FormData();
+    formData.append('raw.directory', destDir);
+    formData.append('raw.asset0', await openAsBlob(src));
+    formData.append('raw.asset0.filename', destFile);
 
     core.info(`➡️ Uploading file '${src}' to '${destPath}'`);
-    const response = await this.http.request('PUT', `${this.repositoryUrl}/${destPath}`, createReadStream(src));
-    const body = await response.readBody();
+    const { statusCode, body } = await this.requestPost(`${this.apiV1components}?repository=${this.repository}`, formData)
+    const bodyText = await body.text();
     
     let errorMessage = '';
-    switch (response.message.statusCode) {
-      case 201:
+    switch (statusCode) {
+      case 204:
         return 'OK';
 
       case 401:
@@ -66,12 +102,12 @@ export class NexusRepositoryClient {
         break;
 
       default:
-        errorMessage = `Server responded with ${response.message.statusCode}`;
+        errorMessage = `Server responded with ${statusCode}`;
         break;
     }
 
-    if (body !== '') {
-      errorMessage += `\n${body}`;
+    if (bodyText !== '') {
+      errorMessage += `\n${bodyText}`;
     }
 
     throw new Error(errorMessage);

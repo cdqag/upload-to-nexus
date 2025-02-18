@@ -4,9 +4,6 @@ module.exports = {
   },
   transformIgnorePatterns: [],
   testEnvironment: 'node',
-  moduleNameMapper: {
-    '^@actions/http-client$': '<rootDir>/src/__mocks__/@actions/http-client.ts'
-  },
   modulePathIgnorePatterns: [
       "__mocks__"
   ],
