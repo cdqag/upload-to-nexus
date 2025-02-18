@@ -96,9 +96,9 @@ This example will:
 
 ## Resources
 
-* This action uses [@action/http-client](https://github.com/actions/toolkit/tree/main/packages/http-client) to send requests to Nexus.
+* This action uses [undici](https://undici.nodejs.org/#/) to send requests to Nexus.
 * Supports glob batters thanks to [mrmlnc/fast-glob](https://github.com/mrmlnc/fast-glob).
-* Nexus documentation [Direct Upload using HTTP PUT to the Repository Path](https://support.sonatype.com/hc/en-us/articles/115006744008-Repository-How-can-I-programmatically-upload-files-into-Nexus-3#DirectUploadusingHTTPPUTtotheRepositoryPath)
+* Nexus's [Components API](https://help.sonatype.com/en/components-api.html)
 
 ## License
 
